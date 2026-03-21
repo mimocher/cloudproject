@@ -1,0 +1,185 @@
+version: '3.8'
+
+services:
+
+  # ── MongoDB ──────────────────────────────────────────────────
+  mongodb:
+    image: mongo:6
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - m206_network
+
+  # ── Auth Service — Port 5001 ──────────────────────────────────
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "5001:5001"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/projet_m206_db
+      - JWT_SECRET=secret_m206_jwt
+    depends_on:
+      - mongodb
+    networks:
+      - m206_network
+    restart: on-failure
+
+  # ── User Service — Port 5002 ──────────────────────────────────
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "5002:5002"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/projet_m206_db
+      - JWT_SECRET=secret_m206_jwt
+    depends_on:
+      - mongodb
+    networks:
+      - m206_network
+    restart: on-failure
+
+  # ── Admin Service — Port 5003 ─────────────────────────────────
+  admin-service:
+    build:
+      context: ./admin-service
+      dockerfile: Dockerfile
+    container_name: admin-service
+    ports:
+      - "5003:5003"
+    environment:
+      - USER_SERVICE_URL=http://user-service:5002
+    depends_on:
+      - user-service
+    networks:
+      - m206_network
+    restart: on-failure
+
+  # ── API Gateway — Port 5000 ───────────────────────────────────
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "5000:5000"
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:5001
+      - USER_SERVICE_URL=http://user-service:5002
+      - ADMIN_SERVICE_URL=http://admin-service:5003
+      - PROJECT_SERVICE_URL=http://project-service:5004
+      - TASK_SERVICE_URL=http://task-service:5005
+      - CHAT_SERVICE_URL=http://chat-service:5006
+      - REPORT_SERVICE_URL=http://report-service:5007
+    depends_on:
+      - auth-service
+      - user-service
+      - admin-service
+    networks:
+      - m206_network
+    restart: on-failure
+
+  # ── Frontend React — Port 3000 ────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api-gateway
+    networks:
+      - m206_network
+    restart: on-failure
+
+  seed:
+    build:
+      context: ./seed
+      dockerfile: Dockerfile
+    container_name: seed
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/projet_m206_db
+    depends_on:
+      - mongodb
+    networks:
+      - m206_network
+    restart: "no"
+  project-service:
+    build:
+      context: ./project-service
+      dockerfile: Dockerfile
+    container_name: project-service
+    ports:
+      - "5004:5004"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/projet_m206_db
+      - JWT_SECRET=secret_m206_jwt
+    depends_on:
+      - mongodb
+    networks:
+      - m206_network
+    restart: on-failure
+  task-service:
+    build:
+      context: ./task-service
+      dockerfile: Dockerfile
+    container_name: task-service
+    ports:
+      - "5005:5005"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/projet_m206_db
+      - JWT_SECRET=secret_m206_jwt
+    depends_on:
+      - mongodb
+    networks:
+      - m206_network
+    restart: on-failure
+  chat-service:
+    build:
+      context: ./chat-service
+      dockerfile: Dockerfile
+    container_name: chat-service
+    ports:
+      - "5006:5006"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/projet_m206_db
+      - JWT_SECRET=secret_m206_jwt
+    depends_on:
+      - mongodb
+    networks:
+      - m206_network
+    restart: on-failure
+  report-service:
+    build:
+      context: ./report-service
+      dockerfile: Dockerfile
+    container_name: report-service
+    ports:
+      - "5007:5007"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/projet_m206_db
+      - JWT_SECRET=secret_m206_jwt
+    depends_on:
+      - mongodb
+    networks:
+      - m206_network
+    restart: on-failure
+
+# ── Volume MongoDB ────────────────────────────────────────────
+volumes:
+  mongo_data:
+    driver: local
+
+# ── Réseau partagé ────────────────────────────────────────────
+networks:
+  m206_network:
+    driver: bridge
