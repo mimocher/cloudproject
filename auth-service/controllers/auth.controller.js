@@ -3,22 +3,18 @@ const jwt  = require('jsonwebtoken');
 
 const SECRET = process.env.JWT_SECRET || 'secret_m206_jwt';
 
-// POST /api/auth/register
+// Inscription
 exports.register = async (req, res) => {
   try {
     const { username, email, password, role } = req.body;
 
-    // Vérifier si l'email existe déjà
-    const existing = await User.findOne({ email });
-    if (existing) {
+    if (await User.findOne({ email }))
       return res.status(400).json({ error: 'Email déjà utilisé' });
-    }
 
-    const user = new User({ username, email, password, role });
-    await user.save();
+    const user = await new User({ username, email, password, role }).save();
 
     res.status(201).json({
-      message: 'Utilisateur créé avec succès',
+      message: 'Utilisateur créé',
       user: { id: user._id, username: user.username, email: user.email, role: user.role }
     });
   } catch (err) {
@@ -26,24 +22,15 @@ exports.register = async (req, res) => {
   }
 };
 
-// POST /api/auth/login
+// Connexion
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ error: 'Utilisateur non trouvé' });
-    }
 
-    if (user.isBlocked) {
-      return res.status(403).json({ error: 'Compte bloqué, contactez l\'administrateur' });
-    }
-
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ error: 'Mot de passe incorrect' });
-    }
+    if (!user)                              return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    if (user.isBlocked)                     return res.status(403).json({ error: 'Compte bloqué' });
+    if (!await user.comparePassword(password)) return res.status(401).json({ error: 'Mot de passe incorrect' });
 
     const token = jwt.sign(
       { id: user._id, role: user.role, username: user.username },
@@ -54,19 +41,14 @@ exports.login = async (req, res) => {
     res.json({
       message: 'Connexion réussie',
       token,
-      user: {
-        id:       user._id,
-        username: user.username,
-        email:    user.email,
-        role:     user.role
-      }
+      user: { id: user._id, username: user.username, email: user.email, role: user.role }
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// GET /api/auth/me  (profil connecté)
+// Profil connecté
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');

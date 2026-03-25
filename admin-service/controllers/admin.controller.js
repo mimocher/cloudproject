@@ -1,59 +1,43 @@
 const axios = require('axios');
 
-// URL du user-service (Docker ou local)
+// Adresse du service utilisateurs
 const USER_SERVICE = process.env.USER_SERVICE_URL || 'http://localhost:5002';
 
-// PUT /api/admin/block/:id  — bloquer un utilisateur
+// Bloquer un utilisateur
 exports.blockUser = async (req, res) => {
   try {
-    const response = await axios.put(
-      `${USER_SERVICE}/api/users/${req.params.id}`,
-      { isBlocked: true }
-    );
-    res.json({
-      message: `Utilisateur ${req.params.id} bloqué avec succès`,
-      user: response.data.user
-    });
+    const rep = await axios.put(`${USER_SERVICE}/api/users/${req.params.id}`, { isBlocked: true });
+    res.json({ message: `Utilisateur bloqué`, user: rep.data.user });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// PUT /api/admin/unblock/:id  — débloquer
+// Débloquer un utilisateur
 exports.unblockUser = async (req, res) => {
   try {
-    const response = await axios.put(
-      `${USER_SERVICE}/api/users/${req.params.id}`,
-      { isBlocked: false }
-    );
-    res.json({
-      message: `Utilisateur ${req.params.id} débloqué avec succès`,
-      user: response.data.user
-    });
+    const rep = await axios.put(`${USER_SERVICE}/api/users/${req.params.id}`, { isBlocked: false });
+    res.json({ message: `Utilisateur débloqué`, user: rep.data.user });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// GET /api/admin/users  — tous les utilisateurs
+// Voir tous les utilisateurs
 exports.getAllUsers = async (req, res) => {
   try {
-    const response = await axios.get(`${USER_SERVICE}/api/users`, {
-      params: req.query
-    });
-    res.json(response.data);
+    const rep = await axios.get(`${USER_SERVICE}/api/users`, { params: req.query });
+    res.json(rep.data);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// DELETE /api/admin/users/:id  — supprimer un utilisateur
+// Supprimer un utilisateur
 exports.deleteUser = async (req, res) => {
   try {
-    const response = await axios.delete(
-      `${USER_SERVICE}/api/users/${req.params.id}`
-    );
-    res.json(response.data);
+    const rep = await axios.delete(`${USER_SERVICE}/api/users/${req.params.id}`);
+    res.json(rep.data);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

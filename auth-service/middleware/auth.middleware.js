@@ -1,7 +1,7 @@
 const jwt    = require('jsonwebtoken');
 const SECRET = process.env.JWT_SECRET || 'secret_m206_jwt';
 
-// Vérifier le token JWT
+// Verification du token
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token      = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
@@ -19,7 +19,7 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// Vérifier si admin
+// Verification si admin
 const isAdmin = (req, res, next) => {
   if (req.user?.role !== 'admin') {
     return res.status(403).json({ error: 'Accès refusé : rôle admin requis' });
@@ -27,7 +27,7 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
-// Vérifier si member ou admin
+// verification si admin ou member
 const isMember = (req, res, next) => {
   if (!['admin', 'member'].includes(req.user?.role)) {
     return res.status(403).json({ error: 'Accès refusé : rôle member requis' });
