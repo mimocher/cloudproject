@@ -1,20 +1,19 @@
-const router = require('express').Router();
-const {
-  getAll, getOne, create, update,
-  remove, getCategories, addMember, removeMember
-} = require('../controllers/project.controller');
+
+const express = require('express');
+const router = express.Router();
+
+const projectController = require('../controllers/project.controller');
 const { verifyToken } = require('../middleware/auth.middleware');
 
-// Toutes les routes sont protégées
 router.use(verifyToken);
 
-router.get('/categories',              getCategories);
-router.get('/',                        getAll);
-router.get('/:id',                     getOne);
-router.post('/',                       create);
-router.put('/:id',                     update);
-router.delete('/:id',                  remove);
-router.post('/:id/members',            addMember);
-router.delete('/:id/members/:userId',  removeMember);
+router.get('/categories', projectController.getCategories);
+router.get('/', projectController.getAll);
+router.get('/:id', projectController.getOne);
+router.post('/', projectController.create);
+router.put('/:id', projectController.update);
+router.delete('/:id', projectController.remove);
+router.post('/:id/members', projectController.addMember);
+router.delete('/:id/members/:userId', projectController.removeMember);
 
 module.exports = router;
