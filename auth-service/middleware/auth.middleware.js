@@ -1,37 +1,35 @@
-const jwt    = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const SECRET = process.env.JWT_SECRET || 'secret_m206_jwt';
-
-// Verification du token
+//Verificqtion du token
 const verifyToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token      = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  const authHeader = req.headers.authorization;
+  const token = authHeader ? authHeader.split(' ')[1] : null;
 
   if (!token) {
     return res.status(401).json({ error: 'Token manquant, accès refusé' });
   }
 
   try {
-    const decoded = jwt.verify(token, SECRET);
-    req.user = decoded;
+    req.user = jwt.verify(token, SECRET);
     next();
   } catch (err) {
     return res.status(401).json({ error: 'Token invalide ou expiré' });
   }
 };
-
-// Verification si admin
+//Verification si il est admin ou pas
 const isAdmin = (req, res, next) => {
-  if (req.user?.role !== 'admin') {
+  if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Accès refusé : rôle admin requis' });
   }
+
   next();
 };
-
-// verification si admin ou member
+//Verfication si il est admin ou membre
 const isMember = (req, res, next) => {
-  if (!['admin', 'member'].includes(req.user?.role)) {
+  if (req.user.role !== 'admin' && req.user.role !== 'member') {
     return res.status(403).json({ error: 'Accès refusé : rôle member requis' });
   }
+
   next();
 };
 
